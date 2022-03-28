@@ -6,8 +6,7 @@ mod notes;
 
 fn main() {
     let arguments: Vec<String> = args().collect();
-
-    let mut notes: notes::Notes = notes::Notes::new(format!(
+    let note_file = format!(
         "{}/.notes",
         if cfg!(unix) {
             var("HOME").unwrap()
@@ -16,8 +15,11 @@ fn main() {
         } else {
             panic!("Unknown platform.")
         }
-    ))
-    .unwrap();
+    );
+    let mut notes: notes::Notes = notes::Notes::new(note_file.clone()).unwrap_or_else(|_| {
+        std::fs::File::create(note_file.clone());
+        notes::Notes::new(note_file).unwrap()
+    });
 
     if arguments.len() == 1 {
         commands::display_help();
