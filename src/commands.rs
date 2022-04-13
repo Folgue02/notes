@@ -1,50 +1,49 @@
 use crate::notes;
 use std::io;
-use std::io::Write;
+use std::io::{Write, ErrorKind};
 
 /// The `most cancerous` function ever written in a programming language, **in the world**
 pub fn run(mut nts: &mut notes::Notes, args: Vec<String>) -> Result<(), &'static str> {
-    // WELCOME TO THE WORLD'S WORST FUNCTION EVER WRITTEN IN A PROGRAMMING LANGUAGE! :D (TODO: `Fix` this)
-    // No arguments supplied
-    if args.len() == 0 {
+    if args.get(0).is_none() {
         display_help();
     } else {
-        // One argument
-        if args.len() >= 1 {
-            if args[0] == "l" {
-                list(&mut nts)?;
-                return Ok(());
-            } else if args[0] == "h" {
-                display_help();
-                return Ok(());
-            } else if args[0] == "c" {
-                cli(&mut nts);
-                return Ok(());
-            }
-        }
-
-        // At least two arguments
-        if args.len() >= 2 {
-            if args[0] == "a" {
-                add(&mut nts, &args[1..].to_vec().join(" "))?;
-            } else if args[0] == "r" {
-                remove(&mut nts, &args[1])?;
-            } else if args.len() >= 3 {
-                // At least three arguments
-                if args[0] == "m" {
-                    move_note(&mut nts, &args[1], &args[2])?;
-                } else {
-                    display_help();
-                }
-            } else {
-                display_help();
+        // No arguments commands
+        if args.len() == 1 {
+            match args[0].as_str() {
+                "l" => list(&mut nts)?,
+                "h" => display_help(),
+                "c" => cli(&mut nts)?,
+                _   => display_help()
             }
         } else {
-            display_help();
+            let cmd_arguments: &Vec<String> = &args[1..].to_vec();
+            // Multiple arguments
+            match args[0].as_str() {
+                "a" => {
+                    println!("Adding note to the note file.");
+                    add(&mut nts, &cmd_arguments.join(" "))?
+                },
+                "r" => {
+                    remove(&mut nts, &cmd_arguments[0])?;
+                    println!("Note removed.");
+                    }
+                "m" => {
+                    move_note(&mut nts, &cmd_arguments[0], &cmd_arguments[1])?;
+                    println!("Notes moved.");
+                }
+                _ => display_help(),
+            }
         }
     }
-    nts.save();
-    Ok(())
+    if let Err(error) = nts.save() {
+        match error.kind() {
+            ErrorKind::PermissionDenied => Err("No rights to write in the notes file."),
+            ErrorKind::NotFound => Err("Notes file doesn't exist."),
+            _ => Err("Unknown error while trying to save the file.")
+        }
+    } else {
+        Ok(())
+    }
 }
 
 pub fn add(notes: &mut notes::Notes, args: &String) -> Result<(), &'static str> {
@@ -67,13 +66,24 @@ pub fn remove(notes: &mut notes::Notes, args: &String) -> Result<(), &'static st
 }
 
 pub fn list(notes: &mut notes::Notes) -> Result<(), &'static str> {
+    let space = notes.len().to_string().len();
+    println!("{}:{}", "-".repeat(space), "-".repeat(15));
     for (idx, note) in notes.get_vec().into_iter().enumerate() {
-        println!("{}:{}", idx + 1, note);
+        println!(
+            "{}{}: {}",
+            idx + 1,
+            " ".repeat(space - (idx + 1).to_string().len()),
+            note
+        );
     }
     Ok(())
 }
 
-pub fn move_note(notes: &mut notes::Notes, original_index: &String, destination_index: &String, ) -> Result<(), &'static str> {
+pub fn move_note(
+    notes: &mut notes::Notes,
+    original_index: &String,
+    destination_index: &String,
+) -> Result<(), &'static str> {
     // Not numbers
     if !is_numeric(&original_index) || !is_numeric(&destination_index) {
         return Err(
@@ -97,19 +107,18 @@ pub fn move_note(notes: &mut notes::Notes, original_index: &String, destination_
     Ok(())
 }
 
-fn cli(mut nts: &mut notes::Notes) {
+fn cli(nts: &mut notes::Notes) -> Result<(), &'static str> {
     println!("Notes Command Line Interface (type 'q' to leave)");
     loop {
         let mut buffer = String::new();
         print!("CLI: ");
         io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut buffer);
+        io::stdin().read_line(&mut buffer).unwrap();
 
         // Quit command
-        if buffer == "q\n" {
-            return ();
+        if buffer.trim() == "q" {
+            break;
         }
-
         match run(
             nts,
             buffer
@@ -130,6 +139,7 @@ fn cli(mut nts: &mut notes::Notes) {
             }
         };
     }
+    Ok(())
 }
 
 pub fn display_help() {
