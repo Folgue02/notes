@@ -1,8 +1,7 @@
 use crate::notes;
 use std::io;
-use std::io::{Write, ErrorKind};
+use std::io::{ErrorKind, Write};
 
-/// The `most cancerous` function ever written in a programming language, **in the world**
 pub fn run(mut nts: &mut notes::Notes, args: Vec<String>) -> Result<(), &'static str> {
     if args.get(0).is_none() {
         display_help();
@@ -13,7 +12,7 @@ pub fn run(mut nts: &mut notes::Notes, args: Vec<String>) -> Result<(), &'static
                 "l" => list(&mut nts)?,
                 "h" => display_help(),
                 "c" => cli(&mut nts)?,
-                _   => display_help()
+                _ => display_help(),
             }
         } else {
             let cmd_arguments: &Vec<String> = &args[1..].to_vec();
@@ -22,11 +21,11 @@ pub fn run(mut nts: &mut notes::Notes, args: Vec<String>) -> Result<(), &'static
                 "a" => {
                     println!("Adding note to the note file.");
                     add(&mut nts, &cmd_arguments.join(" "))?
-                },
+                }
                 "r" => {
                     remove(&mut nts, &cmd_arguments[0])?;
                     println!("Note removed.");
-                    }
+                }
                 "m" => {
                     move_note(&mut nts, &cmd_arguments[0], &cmd_arguments[1])?;
                     println!("Notes moved.");
@@ -39,7 +38,7 @@ pub fn run(mut nts: &mut notes::Notes, args: Vec<String>) -> Result<(), &'static
         match error.kind() {
             ErrorKind::PermissionDenied => Err("No rights to write in the notes file."),
             ErrorKind::NotFound => Err("Notes file doesn't exist."),
-            _ => Err("Unknown error while trying to save the file.")
+            _ => Err("Unknown error while trying to save the file."),
         }
     } else {
         Ok(())
@@ -123,13 +122,7 @@ fn cli(nts: &mut notes::Notes) -> Result<(), &'static str> {
             nts,
             buffer
                 .split(" ")
-                .filter(|slice| {
-                    if slice.trim() != "" || slice.trim() == "\n" {
-                        true
-                    } else {
-                        false
-                    }
-                })
+                .filter(|slice| slice.trim() != "" || slice.trim() == "\n")
                 .map(|slice| String::from(slice.trim()))
                 .collect::<Vec<String>>(),
         ) {
