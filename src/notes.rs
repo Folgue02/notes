@@ -57,7 +57,14 @@ impl std::ops::Index<usize> for Notes {
     type Output = String;
     fn index(&self, idx: usize) -> &Self::Output {
         if idx > self.notes.len() {
-            panic!("{}", format!("Index ({}) out of bounds, the len of notes is {}", idx, self.notes.len()));
+            panic!(
+                "{}",
+                format!(
+                    "Index ({}) out of bounds, the len of notes is {}",
+                    idx,
+                    self.notes.len()
+                )
+            );
         }
         &self.notes[idx]
     }
@@ -66,7 +73,14 @@ impl std::ops::Index<usize> for Notes {
 impl std::ops::IndexMut<usize> for Notes {
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
         if idx > self.notes.len() {
-            panic!("{}", format!("Index ({}) out of bounds, the len of notes is {}", idx, self.notes.len()));
+            panic!(
+                "{}",
+                format!(
+                    "Index ({}) out of bounds, the len of notes is {}",
+                    idx,
+                    self.notes.len()
+                )
+            );
         }
         &mut self.notes[idx]
     }
