@@ -108,14 +108,12 @@ pub fn move_note(
 
 fn cli(nts: &mut notes::Notes) -> Result<(), &'static str> {
     println!("Notes Command Line Interface (type 'q' to leave)");
+    let mut rl = rustyline::Editor::<()>::new();
     loop {
-        let mut buffer = String::new();
-        print!("CLI: ");
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut buffer).unwrap();
+        let buffer = rl.readline("NCLI: ").unwrap();
 
         // Quit command
-        if buffer.trim() == "q" {
+        if buffer == "q" {
             break;
         }
         match run(
