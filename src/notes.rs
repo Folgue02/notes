@@ -1,6 +1,7 @@
 use std::fs::{read_to_string, File};
 use std::io::Write;
 
+const DEFAULT_LOCAL_NOTES: &str = "./.notes";
 pub struct Notes {
     notes: Vec<String>,
     file_path: String,
@@ -50,6 +51,33 @@ impl Notes {
     pub fn len(&self) -> usize {
         self.notes.len()
     }
+    
+    /// Returns the location of the notes file
+    /// This file can be in:
+    /// - $(pwd)/.notes
+    /// - ~/.notes
+    pub fn get_note_file_path() -> String {
+        return if std::path::Path::new(DEFAULT_LOCAL_NOTES).exists() {
+            DEFAULT_LOCAL_NOTES.to_owned()
+        } else {
+            match std::env::var("NOTES_FILE") {
+                Ok(path) => path,
+                Err(_) => {
+                    format!(
+                        "{}/.notes",
+                        if cfg!(windows) {
+                            std::env::var("USERPROFILE").unwrap()
+                        } else if cfg!(unix) {
+                            std::env::var("HOME").unwrap()
+                        } else {
+                            eprintln!("Unknown platform.");
+                            std::process::exit(1);
+                        }
+                    )
+                }
+            }
+        };
+    } 
 }
 
 // Traits
